@@ -43,9 +43,7 @@ As validações utilizam o conjunto de teste, comparando previsões com valores 
 ### 🔍 Gráficos gerados:
 
 - `comparativo_teste_multivariado.png` → Comparativo completo real x previsto
-- `validacao_30_dias_multivariado.png` → Zoom nos últimos 30 dias reais
 - `validacao_e_previsao_30_dias_multivariado.png` → 30 dias reais + 30 dias futuros
-- `previsao_60_dias.png` → Tendência futura para os próximos 60 dias
 - `treinamento_multivariado.png` → Curvas de perda no treinamento do modelo
 
 ### 📈 Exemplos visuais
