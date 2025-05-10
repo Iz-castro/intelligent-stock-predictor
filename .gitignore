@@ -34,11 +34,10 @@ Thumbs.db
 *.ckpt
 *.pb
 
-# Output directories (you can un-comment if desired)
-# models/
-# results/
-# data/raw/
-# data/interim/
+# Output directories (custom)
+models/
+data/
+flagged/
 
 # Git settings
 .git/
@@ -46,3 +45,12 @@ Thumbs.db
 # TensorBoard logs
 logs/
 events.out.tfevents.*
+
+# Gradio cache
+gradio_cached_examples/
+*.gradio
+
+# Arquivos exportados / gerados
+results/*.csv
+results/*.png
+dados_preprocessados.csv

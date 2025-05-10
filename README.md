@@ -38,6 +38,7 @@ As validações utilizam o conjunto de teste, comparando previsões com valores 
 
 - **RMSE** (erro quadrático médio)
 - **MAE** (erro absoluto médio)
+- _(em desenvolvimento)_ **MAPE**, **R²**, análise de resíduos e intervalo de confiança
 
 ### 🔍 Gráficos gerados:
 
@@ -47,6 +48,16 @@ As validações utilizam o conjunto de teste, comparando previsões com valores 
 - `previsao_60_dias.png` → Tendência futura para os próximos 60 dias
 - `treinamento_multivariado.png` → Curvas de perda no treinamento do modelo
 
+### 📈 Exemplos visuais
+
+#### 🧠 Curva de Treinamento (Loss por época)
+![📉 Treinamento](results/treinamento_multivariado_PETR4.png)  
+> A curva de perda mostra uma queda rápida e estabilização, indicando bom aprendizado sem overfitting.
+
+#### 🧪 Comparação Real x Previsto
+![📈 Comparativo](results/comparativo_teste_multivariado_PETR4.png)  
+> O modelo capturou com precisão a dinâmica dos preços históricos, mesmo durante períodos de forte volatilidade.
+
 ---
 
 ## 📁 Estrutura dos arquivos
@@ -54,22 +65,17 @@ As validações utilizam o conjunto de teste, comparando previsões com valores 
 ```
 .
 ├── core/
-│   ├── data_preprocessing_univariado.py
 │   ├── data_preprocessing_multivariado.py
-│   ├── model_lstm_univariado.py
 │   ├── model_lstm_multivariado.py
-│   ├── predictor_univariado.py
 │   └── predictor_multivariado.py
 │
-├── run_training_univariado.py
-├── run_training_multivariado.py
-├── predict_validated_30dias_univariado.py
-├── predict_validated_30dias_multivariado.py
-├── compara_univariado.py
-├── compara_multivariado.py
+├── training_multivariado.py
+├── validar_e_prever_30_dias.py
+├── run_inference.py
+├── comparar_modelo.py
 ├── requirements.txt
 ├── README.md
-└── app_gradio.py (em desenvolvimento)
+└── app.py (interface interativa)
 ```
 
 ---
@@ -106,11 +112,19 @@ python predict_validated_30dias_multivariado.py
 
 ---
 
-## 🔮 O que vem a seguir?
+## 📝 TODOs (em andamento)
 
-- Integração via interface **Gradio** para uso interativo
-- Permitir upload de CSVs e seleção do modelo
-- Exportação de relatórios de previsão em tempo real
+### 🔍 Aferição e Métricas:
+- [ ] Implementar **MAPE** (Erro Percentual Absoluto Médio)
+- [ ] Adicionar **R² (Coeficiente de Determinação)**
+- [ ] Gerar gráfico de **resíduos (erro real - previsto)**
+- [ ] Avaliar consistência das previsões para extremos de mercado
+
+### 📈 Previsão Futura (30 dias):
+- [ ] Remover ou suavizar **limites artificiais de clipping**
+- [ ] Usar **múltiplas amostras (Monte Carlo)** para intervalo de confiança
+- [ ] Ajustar mecanismo de atualização da sequência (melhor memória recorrente)
+- [ ] Considerar `stateful=True` com manutenção de estado entre previsões futuras
 
 ---
 
@@ -120,6 +134,6 @@ Desenvolvido por [Izael Castro] — Repositório educativo/pessoal
 Licença: MIT
 
 ## 📬 Contato
-Izael Castro
-Email: izaeldecastro@gmail.com
+Izael Castro  
+Email: izaeldecastro@gmail.com  
 GitHub: Iz-castro
