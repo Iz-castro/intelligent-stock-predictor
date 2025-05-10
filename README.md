@@ -1,4 +1,4 @@
-# 📊 Intelligent Stock Predictor - LSTM Univariado & Multivariado
+# 📊 Intelligent Stock Predictor - LSTM 
 
 Este projeto tem como objetivo a construção de modelos de machine learning capazes de prever o comportamento de ativos financeiros com base em séries temporais. Utilizando arquiteturas LSTM (Long Short-Term Memory), o sistema foi projetado para analisar históricos de preços e gerar previsões para prazos variados.
 
@@ -15,11 +15,6 @@ Este projeto tem como objetivo a construção de modelos de machine learning cap
 ---
 
 ## 🧠 Modelos treinados
-
-### 🔹 LSTM Univariado
-- Entrada: Fechamento dos últimos 60 dias
-- Previsão: Fechamento do próximo dia
-- Arquivo: `model_lstm_univariado.keras`
 
 ### 🔸 LSTM Multivariado (Aprimorado)
 - Entrada: 
