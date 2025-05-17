@@ -162,5 +162,5 @@ Developed by **Izael Castro**
 
 ## 📜 License
 
-This project is licensed under the MIT License.  
+This project is licensed under the Apache License.  
 See the `LICENSE` file for more details.
