@@ -160,5 +160,5 @@ Desenvolvido por **Izael Castro**
 
 ## 📜 Licença
 
-Este projeto está licenciado sob a Licença MIT.  
+Este projeto está licenciado sob a Licença Apache.  
 Consulte o arquivo `LICENSE` para mais detalhes.
