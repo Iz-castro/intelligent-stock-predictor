@@ -113,14 +113,12 @@ venv\Scripts\activate     # Windows
 pip install -r requirements.txt
 ```
 
-4. Train the model:  
-  (Optional — the training can also be triggered directly from `app.py`)
+4. Train the model: (Optional — the training can also be triggered directly from `app.py`)
 ```bash
 python train_multivariado.py
 ```
 
-5. Generate comparisons and forecasts:
-  (Optional — the training can also be triggered directly from `app.py`)
+5. Generate comparisons and forecasts: (Optional — the training can also be triggered directly from `app.py`)
 ```bash
 python compara_modelo.py
 python validar_e_prever_30_dias.py
