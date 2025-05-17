@@ -1,132 +1,158 @@
-# 📊 Intelligent Stock Predictor - LSTM 
+# 📈 Intelligent Stock Predictor (Multivariate LSTM)
 
-Este projeto tem como objetivo a construção de modelos de machine learning capazes de prever o comportamento de ativos financeiros com base em séries temporais. Utilizando arquiteturas LSTM (Long Short-Term Memory), o sistema foi projetado para analisar históricos de preços e gerar previsões para prazos variados.
-
----
-
-## 🎯 Objetivos
-
-- Criar um sistema inteligente que:
-  - Preveja o fechamento do preço de ações para o **próximo dia útil**;
-  - Valide as previsões com os dados reais de teste;
-  - Projete **cenários futuros para 30 e 60 dias** com base no comportamento atual do mercado;
-  - Compare abordagens **univariadas** (apenas fechamento) e **multivariadas** (com indicadores técnicos).
+This project aims to forecast the closing prices of Brazilian stocks using multivariate time series processed by LSTM neural networks. The model is trained individually for each asset using historical data obtained from *br.investing.com*, and the application features graphical visualizations and an interactive Gradio interface.
 
 ---
 
-## 🧠 Modelos treinados
+## 🎯 Objective
 
-### 🔸 LSTM Multivariado (Aprimorado)
-- Entrada: 
-  - `Fechamento`
-  - `Retorno_%` (variação percentual)
-  - `MM9` (média móvel de 9 dias)
-  - `RSI` (indicador de momentum)
-- Previsão: Fechamento do próximo dia
-- Arquivo: `model_lstm_multivariado.keras`
+Develop a modular and intelligent system that:
+- Predicts the **next trading day's** closing price based on the past 60 days;
+- Compares predictions with actual test data;
+- Projects **future trends for 30 and 60 business days**;
+- Supports interactive usage with CSV file upload via Gradio;
+- Is easily auditable and updatable.
 
 ---
 
-## 🧪 Validação e Comparativos
+## 🧠 Model Architecture
 
-As validações utilizam o conjunto de teste, comparando previsões com valores reais e gerando métricas:
+### 🔸 Multivariate LSTM
+- **Input Features:**
+  - `Closing Price`
+  - `Return_%`
+  - `MM9` (9-day moving average)
+  - `RSI` (Relative Strength Index)
+- **Prediction:** Closing price for the next business day
+- **Model File:** `model_lstm_multivariado.keras`
 
-- **RMSE** (erro quadrático médio)
-- **MAE** (erro absoluto médio)
-- _(em desenvolvimento)_ **MAPE**, **R²**, análise de resíduos e intervalo de confiança
-
-### 🔍 Gráficos gerados:
-
-- `comparativo_teste_multivariado.png` → Comparativo completo real x previsto
-- `validacao_e_previsao_30_dias_multivariado.png` → 30 dias reais + 30 dias futuros
-- `treinamento_multivariado.png` → Curvas de perda no treinamento do modelo
-
-### 📈 Exemplos visuais
-
-#### 🧠 Curva de Treinamento (Loss por época)
-![📉 Treinamento](results/treinamento_multivariado_PETR4.png)  
-> A curva de perda mostra uma queda rápida e estabilização, indicando bom aprendizado sem overfitting.
-
-#### 🧪 Comparação Real x Previsto
-![📈 Comparativo](results/comparativo_teste_multivariado_PETR4.png)  
-> O modelo capturou com precisão a dinâmica dos preços históricos, mesmo durante períodos de forte volatilidade.
+The architecture consists of **three sequential LSTM layers** with **progressive Dropouts** to avoid overfitting, followed by a final dense layer that outputs the predicted closing price. 
+The network is optimized using the **Adam optimizer** with a reduced learning rate to ensure training stability.
 
 ---
 
-## 📁 Estrutura dos arquivos
+## 📊 Quantitative Results
+
+| Ticker | RMSE  | MAE   | Last Evaluation       |
+|--------|-------|-------|------------------------|
+| PETR4  | 1.52  | 1.11  | 2025-05-15 22:10:03     |
+| BBAS3  | 1.22  | 0.95  | 2025-05-16 10:37:42     |
+| VALE3  | 1.73  | 1.28  | 2025-05-16 11:02:25     |
+
+
+> Metrics were calculated using the test set (20%) and saved in `results/metricas_modelos.csv`.
+
+---
+
+## 📉 Comparison Graphs
+
+### 🔹 Actual vs Predicted:
+- ![PETR4](results/comparativo_teste_multivariado_PETR4.png)
+- ![BBAS3](results/comparativo_teste_multivariado_BBAS3.png)
+- ![VALE3](results/comparativo_teste_multivariado_VALE3.png)
+
+### 🔹 Training Curves:
+- `treinamento_multivariado_PETR4.png`
+- `treinamento_multivariado_BBAS3.png`
+- `treinamento_multivariado_VALE3.png`
+
+### 🔮 Future Projections:
+- `validacao_e_previsao_30_dias_multivariado.png`
+- `previsao_60_dias.png`
+
+---
+
+## 📦 Project Structure
 
 ```
 .
 ├── core/
 │   ├── data_preprocessing_multivariado.py
 │   ├── model_lstm_multivariado.py
-│   └── predictor_multivariado.py
-│
-├── training_multivariado.py
+│   ├── predictor_multivariado.py
+├── data/raw/
+├── models/
+├── results/
+├── utils/
+│   └── metrics.py
+├── train_multivariado.py
+├── compara_modelo.py
 ├── validar_e_prever_30_dias.py
-├── run_inference.py
-├── comparar_modelo.py
+├── app.py
 ├── requirements.txt
 ├── README.md
-└── app.py (interface interativa)
 ```
 
 ---
 
-## ▶️ Como executar
+## 🔧 How to Run Locally
 
-1. Instale dependências:
+1. Clone the repository:
+```bash
+git clone https://github.com/Iz-castro/intelligent-stock-predictor.git
+cd intelligent-stock-predictor
+```
+
+2. Create and activate a virtual environment:
+```bash
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+venv\Scripts\activate     # Windows
+```
+
+3. Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
-2. Execute o treinamento multivariado:
+4. Train the model:
 ```bash
-python run_training_multivariado.py
+python train_multivariado.py
 ```
 
-3. Compare previsões com dados reais:
+5. Generate comparisons and forecasts:
 ```bash
-python compara_multivariado.py
+python compara_modelo.py
+python validar_e_prever_30_dias.py
 ```
 
-4. Visualize a tendência futura:
+6. Launch the interactive app:
 ```bash
-python predict_validated_30dias_multivariado.py
+python app.py
 ```
 
 ---
 
-## 💡 Dicas de uso
+## 🌐 Web Application
 
-- Substitua os arquivos `.csv` em `data/raw/` com históricos reais de qualquer papel de ação
-- Os modelos serão automaticamente treinados com base nesses dados
-- Resultados e gráficos serão salvos na pasta `results/`
+The project uses **Gradio** to provide an interactive interface for:
+- Uploading `.csv` files;
+- Training with multiple assets;
+- Viewing metrics and charts;
+- Making predictions with updated data.
 
----
-
-## 📝 TODOs (em andamento)
-
-### 🔍 Aferição e Métricas:
-- [ ] Implementar **MAPE** (Erro Percentual Absoluto Médio)
-- [ ] Adicionar **R² (Coeficiente de Determinação)**
-- [ ] Gerar gráfico de **resíduos (erro real - previsto)**
-- [ ] Avaliar consistência das previsões para extremos de mercado
-
-### 📈 Previsão Futura (30 dias):
-- [ ] Remover ou suavizar **limites artificiais de clipping**
-- [ ] Usar **múltiplas amostras (Monte Carlo)** para intervalo de confiança
-- [ ] Ajustar mecanismo de atualização da sequência (melhor memória recorrente)
-- [ ] Considerar `stateful=True` com manutenção de estado entre previsões futuras
+> 💡 Hosting planned for HuggingFace Spaces or Streamlit Cloud.
 
 ---
 
-## 🧠 Autor & Licença
+## 🔍 Data Source
 
-Desenvolvido por [Izael Castro] — Repositório educativo/pessoal  
-Licença: MIT
+- Data was manually obtained from: https://br.investing.com/
+- 🚧 TODO: Replace with automated API ingestion (e.g., Alpha Vantage, Twelve Data, or official B3 API)
 
-## 📬 Contato
-Izael Castro  
-Email: izaeldecastro@gmail.com  
-GitHub: Iz-castro
+---
+
+## 📢 Contact & Credits
+
+Developed by **Izael Castro**  
+📬 Email: *izaeldecastro@gmail.com*  
+🔗 GitHub: [Iz-castro](https://github.com/Iz-castro)  
+🔗 LinkedIn: [www.linkedin.com/in/izcastro](https://www.linkedin.com/in/izcastro)
+
+> 🇧🇷 Para ler esta documentação em português, acesse [README_PT-BR.md](README_PT-BR.md)
+---
+
+## 📜 License
+
+This project is licensed under the MIT License.  
+See the `LICENSE` file for more details.

@@ -7,6 +7,7 @@ import cloudpickle
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 from tensorflow.keras.models import load_model
 from core.data_preprocessing_multivariado import merge_and_clean_csv, preprocess_data, split_data
+from utils.metrics import salvar_metricas  # ✅ novo import
 
 MODEL_DIR = "models"
 RESULTS_DIR = "results"
@@ -33,13 +34,16 @@ def comparar_modelo(papel: str, csv_path: str):
     _, X, y = preprocess_data(df, feature_cols=FEATURE_COLS, sequence_length=60)
     _, X_test, _, y_test = split_data(X, y, test_size=0.2)
 
+    # Previsão e métricas
     y_pred_scaled = model.predict(X_test)
     y_test_true = scaler.inverse_transform(np.hstack([y_test, np.zeros((len(y_test), scaler.n_features_in_ - 1))]))[:, 0]
     y_pred_true = scaler.inverse_transform(np.hstack([y_pred_scaled, np.zeros((len(y_pred_scaled), scaler.n_features_in_ - 1))]))[:, 0]
 
-    # Métricas
     rmse = mean_squared_error(y_test_true, y_pred_true, squared=False)
     mae = mean_absolute_error(y_test_true, y_pred_true)
+
+    # ✅ Salvar métricas em CSV via utilitário
+    salvar_metricas(papel, rmse, mae)
 
     # Plot
     datas = df['Data'].iloc[-len(y_test_true):].reset_index(drop=True)
