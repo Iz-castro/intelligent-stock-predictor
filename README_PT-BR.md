@@ -112,12 +112,12 @@ venv\Scripts\activate     # Windows
 pip install -r requirements.txt
 ```
 
-4. Execute o treinamento:
+4. Execute o treinamento: (Opcional — o treinamento também pode ser acionado diretamente no 'app.py')
 ```bash
 python train_multivariado.py
 ```
 
-5. Gere comparações e previsões:
+5. Gere comparações e previsões: (Opcional — também pode ser acionado diretamente no 'app.py')
 ```bash
 python compara_modelo.py
 python validar_e_prever_30_dias.py
