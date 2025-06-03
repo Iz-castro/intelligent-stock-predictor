@@ -9,8 +9,11 @@ from core.data_preprocessing_multivariado import merge_and_clean_csv
 RESULTS_DIR = "results"
 MODEL_DIR = "models"
 os.makedirs(RESULTS_DIR, exist_ok=True)
+os.makedirs(MODEL_DIR, exist_ok=True)
 
 def listar_papeis_treinados():
+    if not os.path.isdir(MODEL_DIR):
+        return []
     arquivos = os.listdir(MODEL_DIR)
     papeis = set()
     for nome in arquivos:
