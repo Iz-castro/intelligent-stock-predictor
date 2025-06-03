@@ -1,1 +1,1 @@
-"# Pasta de sa°da com gr†ficos e previs‰es" 
+# Pasta de sa√≠da com gr√°ficos e previs√µes
