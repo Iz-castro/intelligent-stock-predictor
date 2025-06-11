@@ -13,13 +13,6 @@ O autor não se responsabiliza por quaisquer perdas decorrentes do uso deste sof
 
 ---
 
-## ⚠️ AVISO LEGAL
-
-Este projeto tem finalidade estritamente educacional e de pesquisa. Não constitui recomendação de investimento nem orientação financeira.
-
-O uso dos resultados ou previsões geradas por este modelo para tomar decisões de compra ou venda de ativos é de inteira responsabilidade do usuário. O autor não se responsabiliza por eventuais perdas financeiras decorrentes do uso deste software. Sempre consulte um profissional habilitado antes de investir.
-
----
 
 ## 🎯 Objetivo
 
