@@ -198,10 +198,6 @@ Desenvolvido por **Izael Castro**
 
 ## 📜 Licença
 
-<<<<<<< HEAD
-Este projeto está licenciado sob a licença Apache.  
-Veja o arquivo `LICENSE` para mais detalhes.
-=======
 Este projeto está licenciado sob a Licença Apache.  
 Consulte o arquivo `LICENSE` para mais detalhes.
->>>>>>> 57d9e2a2c21c4900365bdd0359542fbc3c1eec7b
+
