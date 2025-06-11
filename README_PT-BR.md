@@ -150,20 +150,14 @@ venv\Scripts\activate     # Windows
 pip install -r requirements.txt
 ```
 
-<<<<<<< HEAD
-4. Treine o modelo: (Opcional — o treino também pode ser feito diretamente no `app.py`)
-=======
 4. Execute o treinamento: (Opcional — o treinamento também pode ser acionado diretamente no 'app.py')
->>>>>>> 57d9e2a2c21c4900365bdd0359542fbc3c1eec7b
+
 ```bash
 python train_multivariado.py
 ```
 
-<<<<<<< HEAD
-5. Gere as comparações e previsões: (Opcional — pode ser feito também pelo `app.py`)
-=======
 5. Gere comparações e previsões: (Opcional — também pode ser acionado diretamente no 'app.py')
->>>>>>> 57d9e2a2c21c4900365bdd0359542fbc3c1eec7b
+
 ```bash
 python comparar_modelo.py
 python validar_e_prever_30_dias.py
