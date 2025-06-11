@@ -13,6 +13,14 @@ O autor não se responsabiliza por quaisquer perdas decorrentes do uso deste sof
 
 ---
 
+## ⚠️ AVISO LEGAL
+
+Este projeto tem finalidade estritamente educacional e de pesquisa. Não constitui recomendação de investimento nem orientação financeira.
+
+O uso dos resultados ou previsões geradas por este modelo para tomar decisões de compra ou venda de ativos é de inteira responsabilidade do usuário. O autor não se responsabiliza por eventuais perdas financeiras decorrentes do uso deste software. Sempre consulte um profissional habilitado antes de investir.
+
+---
+
 ## 🎯 Objetivo
 
 Desenvolver um sistema modular e inteligente que:
@@ -149,12 +157,20 @@ venv\Scripts\activate     # Windows
 pip install -r requirements.txt
 ```
 
+<<<<<<< HEAD
 4. Treine o modelo: (Opcional — o treino também pode ser feito diretamente no `app.py`)
+=======
+4. Execute o treinamento: (Opcional — o treinamento também pode ser acionado diretamente no 'app.py')
+>>>>>>> 57d9e2a2c21c4900365bdd0359542fbc3c1eec7b
 ```bash
 python train_multivariado.py
 ```
 
+<<<<<<< HEAD
 5. Gere as comparações e previsões: (Opcional — pode ser feito também pelo `app.py`)
+=======
+5. Gere comparações e previsões: (Opcional — também pode ser acionado diretamente no 'app.py')
+>>>>>>> 57d9e2a2c21c4900365bdd0359542fbc3c1eec7b
 ```bash
 python comparar_modelo.py
 python validar_e_prever_30_dias.py
@@ -195,5 +211,10 @@ Desenvolvido por **Izael Castro**
 
 ## 📜 Licença
 
+<<<<<<< HEAD
 Este projeto está licenciado sob a licença Apache.  
 Veja o arquivo `LICENSE` para mais detalhes.
+=======
+Este projeto está licenciado sob a Licença Apache.  
+Consulte o arquivo `LICENSE` para mais detalhes.
+>>>>>>> 57d9e2a2c21c4900365bdd0359542fbc3c1eec7b
