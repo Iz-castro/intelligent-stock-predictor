@@ -75,9 +75,16 @@ def split_data(X, y, test_size=0.2):
     return train_test_split(X, y, test_size=test_size, shuffle=False)
 
 def merge_and_clean_csv(filepaths):
-    all_dfs = [clean_and_format_dataframe(pd.read_csv(fp)) for fp in filepaths]
+    def safe_load(fp):
+        df = pd.read_csv(fp)
+        if 'Último' in df.columns or 'Vol.' in df.columns:
+            return clean_and_format_dataframe(df)
+        return df  # já está pronto (como vindo da Alpha Vantage)
+
+    all_dfs = [safe_load(fp) for fp in filepaths]
     merged_df = pd.concat(all_dfs).drop_duplicates(subset=['Data'])
     return merged_df.sort_values('Data').reset_index(drop=True)
+
 
 def load_csv(filepath):
     return pd.read_csv(filepath, parse_dates=True, index_col=0)

@@ -16,14 +16,15 @@ FEATURE_COLS = ['Fechamento', 'Retorno_%', 'MM9', 'RSI']
 
 os.makedirs(RESULTS_DIR, exist_ok=True)
 
-def validar_e_prever_30_dias(papel: str, csv_path: str):
+def validar_e_prever_30_dias(papel: str, csv_path: str, tipo_modelo: str = 'lstm'):
     papel = papel.upper()
+    model_prefix = tipo_modelo.lower()  # 'lstm' ou 'gru'
 
-    model_path = os.path.join(MODEL_DIR, f'model_lstm_multivariado_{papel}.keras')
-    scaler_path = os.path.join(MODEL_DIR, f'scaler_lstm_multivariado_{papel}.pkl')
+    model_path = os.path.join(MODEL_DIR, f'model_{model_prefix}_multivariado_{papel}.keras')
+    scaler_path = os.path.join(MODEL_DIR, f'scaler_{model_prefix}_multivariado_{papel}.pkl')
 
     if not os.path.exists(model_path) or not os.path.exists(scaler_path):
-        raise FileNotFoundError(f"❌ Modelo '{papel}' não encontrado. Treine-o antes.")
+        raise FileNotFoundError(f"❌ Modelo '{papel}' ({tipo_modelo.upper()}) não encontrado. Treine-o antes.")
 
     model = load_model(model_path)
     with open(scaler_path, 'rb') as f:
@@ -40,7 +41,6 @@ def validar_e_prever_30_dias(papel: str, csv_path: str):
     ultimos_30_true = y_test_true[-30:]
     ultimos_30_pred = y_pred_true[-30:]
 
-    # ✅ CORREÇÃO AQUI:
     datas_validacao = pd.to_datetime(
         df['Data'].iloc[-len(y_test_true):].reset_index(drop=True)[-30:]
     )
@@ -70,12 +70,12 @@ def validar_e_prever_30_dias(papel: str, csv_path: str):
         contador += 1
 
     # Plot
-    plot_path = os.path.join(RESULTS_DIR, f'validacao_e_previsao_30_dias_{papel}.png')
+    plot_path = os.path.join(RESULTS_DIR, f'validacao_e_previsao_30_dias_{model_prefix}_{papel}.png')
     plt.figure(figsize=(12, 5))
     plt.plot(datas_validacao, ultimos_30_true, label='Real (últimos 30)')
     plt.plot(datas_validacao, ultimos_30_pred, label='Previsto (últimos 30)')
     plt.plot(datas_futuras, futuro, label='Previsto (futuros)', linestyle='--')
-    plt.title(f'Validação + Previsão 30 dias - {papel}')
+    plt.title(f'Validação + Previsão 30 dias - {papel} ({tipo_modelo.upper()})')
     plt.xlabel('Data')
     plt.ylabel('Preço (R$)')
     plt.xticks(rotation=45)
@@ -85,4 +85,4 @@ def validar_e_prever_30_dias(papel: str, csv_path: str):
     plt.savefig(plot_path)
     plt.close()
 
-    return f"✅ Previsão para os próximos 30 dias gerada com sucesso!", plot_path
+    return f"✅ Previsão para os próximos 30 dias gerada com sucesso! ({tipo_modelo.upper()})", plot_path

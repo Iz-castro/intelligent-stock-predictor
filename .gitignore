@@ -50,7 +50,3 @@ events.out.tfevents.*
 gradio_cached_examples/
 *.gradio
 
-# Arquivos exportados / gerados
-results/*.csv
-results/*.png
-dados_preprocessados.csv

@@ -1,63 +1,106 @@
-# 📈 Intelligent Stock Predictor (LSTM Multivariado)
 
-Este projeto tem como objetivo prever preços de fechamento de ações brasileiras com base em séries temporais multivariadas, utilizando redes neurais LSTM. A aplicação é treinada individualmente para cada papel com dados históricos obtidos do site *br.investing.com*, e conta com visualizações gráficas e interface interativa via Gradio.
+# 📈 Intelligent Stock Predictor (LSTM & GRU Multivariado)
+
+Este projeto tem como objetivo prever o preço de fechamento de ações brasileiras utilizando séries temporais multivariadas processadas por redes neurais profundas do tipo LSTM e GRU. O modelo é treinado individualmente para cada ativo, com dados históricos obtidos do site *br.investing.com*. A aplicação oferece visualizações gráficas e uma interface interativa desenvolvida com Gradio.
+
+---
+
+## ⚠️ AVISO
+
+Este projeto é apenas para fins educacionais e demonstração de portfólio. **Não** constitui recomendação de investimento ou sugestão de compra/venda.  
+Os resultados e previsões apresentados são exclusivamente para mostrar habilidades em ciência de dados e machine learning.  
+O autor não se responsabiliza por quaisquer perdas decorrentes do uso deste software. **Sempre consulte profissionais qualificados antes de tomar decisões financeiras.**
 
 ---
 
 ## 🎯 Objetivo
 
-Desenvolver um sistema inteligente e modular que:
-- Realize previsões para o **próximo dia útil** com base em 60 dias anteriores;
-- Compare previsões com dados reais de teste;
-- Projete **tendências futuras de 30 e 60 dias úteis**;
-- Permita uso interativo com upload de dados CSV via Gradio;
-- Seja facilmente atualizável e auditável.
+Desenvolver um sistema modular e inteligente que:
+- Prediz o **preço de fechamento do próximo pregão** com base nos últimos 60 dias;
+- Compara previsões com os dados reais de teste;
+- Projeta **tendências futuras para os próximos 30 dias úteis**;
+- Permite uso interativo com upload de arquivos CSV via Gradio;
+- Seja auditável e facilmente atualizável.
 
 ---
 
-## 🧠 Modelo Utilizado
+## 🧠 Arquitetura dos Modelos
 
-### 🔸 LSTM Multivariado
-- Entrada:
+### 🔸 LSTM & GRU Multivariado
+- **Features de entrada:**
   - `Fechamento`
   - `Retorno_%`
-  - `MM9`
-  - `RSI`
-- Previsão: Fechamento do próximo dia
-- Arquivo: `model_lstm_multivariado.keras`
+  - `MM9` (Média Móvel de 9 dias)
+  - `RSI` (Índice de Força Relativa)
+- **Predição:** Preço de fechamento do próximo dia útil
+- **Arquivos dos modelos:** `model_lstm_multivariado.keras` ou `model_gru_multivariado.keras`
 
-A arquitetura utilizada consiste em três camadas LSTM sequenciais com Dropouts progressivos para evitar overfitting, seguidas por uma camada densa final que retorna a previsão de fechamento. 
-A rede é otimizada com o otimizador Adam e taxa de aprendizado reduzida para garantir estabilidade no treinamento.
-
----
-
-## 📊 Resultados Quantitativos
-
-| Papel   | RMSE   | MAE    | Última Avaliação       |
-|---------|--------|--------|------------------------|
-| PETR4   | 1.52   | 1.11   | 2025-05-15 22:10:03     |
-| BBAS3   | 1.22   | 0.95   | 2025-05-16 10:37:42     |
-| VALE3   | 1.73   | 1.28   | 2025-05-16 11:02:25     |
-
-> As métricas foram geradas com base no conjunto de teste (20%) e salvas em `results/metricas_modelos.csv`.
+As arquiteturas consistem em **três camadas sequenciais de LSTM ou GRU** com Dropouts progressivos para evitar overfitting, seguidas de uma camada densa final que entrega a previsão do preço de fechamento.  
+A rede utiliza **otimizador Adam** com taxa de aprendizado reduzida para estabilidade no treinamento.
 
 ---
 
-## 📉 Gráficos de Comparação
+## 🗂️ Fonte dos Dados e Atualizações
 
-### 🔹 Comparativo Real x Previsto:
-- ![PETR4](results/comparativo_teste_multivariado_PETR4.png)
-- ![BBAS3](results/comparativo_teste_multivariado_BBAS3.png)
-- ![VALE3](results/comparativo_teste_multivariado_VALE3.png)
+- Os dados foram obtidos manualmente em: [Investing.com](https://br.investing.com/)
+- ⚙️ **Futuro:** O projeto será atualizado para utilizar APIs automáticas (ex: Alpha Vantage, Twelve Data ou API oficial da B3) para ingestão contínua e em tempo real dos dados.  
+  No momento, os dados baixados do Investing são mais do que suficientes para um treino robusto e estão sempre atualizados para fins de teste e demonstração.
+- **Nota:** Para fins de documentação clara, exibimos apenas resultados do papel PETR4 neste README. Para outros ativos, execute o programa ou entre em contato com o autor.
+
+---
+
+## 📊 Resultados Quantitativos — LSTM vs GRU (PETR4)
+
+Abaixo apresentamos o desempenho das arquiteturas LSTM e GRU usando PETR4 como exemplo.
+
+| Modelo  |  RMSE   |  MAE   |  MAPE (%) |   R²   |  MedAE  |  Directional_Acc (%) |
+|:--------|--------:|-------:|----------:|-------:|--------:|---------------------:|
+| **lstm**| 1.93    | 1.42   |    7.03   | 0.95   | 1.08    | 49.03               |
+| **gru** | 1.30    | 0.91   |    4.28   | 0.98   | 0.69    | 51.53               |
+
+> As métricas foram calculadas sobre o conjunto de teste (20%) e estão salvas em `results/metricas_modelos.csv`.
+
+---
+
+### 🔹 Gráficos Comparativos
+
+**RMSE:**  
+![RMSE](results/grafico_rmse.png)
+
+**MAE:**  
+![MAE](results/grafico_mae.png)
+
+**MAPE:**  
+![MAPE](results/grafico_mape.png)
+
+**R²:**  
+![R²](results/grafico_r2.png)
+
+**Directional Accuracy:**  
+![Directional Accuracy](results/grafico_directional_acc.png)
+
+---
+
+### 🔹 Real vs Previsto (PETR4):
+
+- **LSTM:**  
+  ![PETR4 LSTM](results/comparativo_teste_multivariado_lstm_PETR4.png)
+- **GRU:**  
+  ![PETR4 GRU](results/comparativo_teste_multivariado_gru_PETR4.png)
 
 ### 🔹 Curvas de Treinamento:
-- `treinamento_multivariado_PETR4.png`
-- `treinamento_multivariado_BBAS3.png`
-- `treinamento_multivariado_VALE3.png`
 
-### 🔮 Projeções Futuras:
-- `validacao_e_previsao_30_dias_multivariado.png`
-- `previsao_60_dias.png`
+- **LSTM:**  
+  ![LSTM Training Curve](results/treinamento_multivariado_lstm_PETR4.png)
+- **GRU:**  
+  ![GRU Training Curve](results/treinamento_multivariado_gru_PETR4.png)
+
+### 🔮 Projeção Futura (PETR4):
+
+- **LSTM:**  
+  ![LSTM Future Projection](results/validacao_e_previsao_30_dias_lstm_PETR4.png)
+- **GRU:**  
+  ![GRU Future Projection](results/validacao_e_previsao_30_dias_gru_PETR4.png)
 
 ---
 
@@ -68,6 +111,7 @@ A rede é otimizada com o otimizador Adam e taxa de aprendizado reduzida para ga
 ├── core/
 │   ├── data_preprocessing_multivariado.py
 │   ├── model_lstm_multivariado.py
+│   ├── model_gru_multivariado.py
 │   ├── predictor_multivariado.py
 ├── data/raw/
 ├── models/
@@ -75,8 +119,9 @@ A rede é otimizada com o otimizador Adam e taxa de aprendizado reduzida para ga
 ├── utils/
 │   └── metrics.py
 ├── train_multivariado.py
-├── compara_modelo.py
+├── comparar_modelo.py
 ├── validar_e_prever_30_dias.py
+├── gerar_metricas_e_graficos.py
 ├── app.py
 ├── requirements.txt
 ├── README.md
@@ -84,7 +129,7 @@ A rede é otimizada com o otimizador Adam e taxa de aprendizado reduzida para ga
 
 ---
 
-## 🔧 Como Executar Localmente
+## 🔧 Como rodar localmente
 
 1. Clone o repositório:
 ```bash
@@ -104,44 +149,42 @@ venv\Scripts\activate     # Windows
 pip install -r requirements.txt
 ```
 
-4. Execute o treinamento:
+4. Treine o modelo: (Opcional — o treino também pode ser feito diretamente no `app.py`)
 ```bash
 python train_multivariado.py
 ```
 
-5. Gere comparações e previsões:
+5. Gere as comparações e previsões: (Opcional — pode ser feito também pelo `app.py`)
 ```bash
-python compara_modelo.py
+python comparar_modelo.py
 python validar_e_prever_30_dias.py
 ```
 
-6. Rode a aplicação interativa:
+6. Inicie a interface interativa:
 ```bash
 python app.py
+```
+
+7. Gere gráficos e métricas para atualização do portfólio:
+```bash
+python gerar_metricas_e_graficos.py
 ```
 
 ---
 
 ## 🌐 Aplicação Web
 
-A aplicação é implementada com **Gradio**, permitindo:
-- Upload de novos arquivos `.csv`;
+O projeto utiliza **Gradio** para disponibilizar uma interface interativa que permite:
+- Upload de arquivos `.csv`;
 - Treinamento com múltiplos papéis;
 - Visualização de métricas e gráficos;
-- Previsão baseada em dados atualizados.
+- Previsão de preços com dados atualizados.
 
-> 💡 Futuramente, será hospedada via HuggingFace Spaces ou Streamlit Cloud.
-
----
-
-## 🔍 Fonte dos Dados
-
-- Os dados foram obtidos manualmente do site: https://br.investing.com/
-- 🚧 TODO: Atualizar para uso de API automática (Alpha Vantage, Twelve Data, B3 oficial)
+> 💡 Planeja-se hospedar futuramente na HuggingFace Spaces ou Streamlit Cloud.
 
 ---
 
-## 📢 Contato e Créditos
+## 📢 Contato & Créditos
 
 Desenvolvido por **Izael Castro**  
 📬 Email: *izaeldecastro@gmail.com*  
@@ -152,5 +195,5 @@ Desenvolvido por **Izael Castro**
 
 ## 📜 Licença
 
-Este projeto está licenciado sob a Licença MIT.  
-Consulte o arquivo `LICENSE` para mais detalhes.
+Este projeto está licenciado sob a licença Apache.  
+Veja o arquivo `LICENSE` para mais detalhes.
