@@ -1,0 +1,4 @@
+serie,especificacao,ADF_estat,ADF_p,KPSS_estat,KPSS_p,leitura
+log-preço,c,-0.4722023469214307,0.8973278254899146,8.396781788356853,0.01,raiz unitaria
+log-preço,ct,-1.7119218080623337,0.7456038692068216,1.3652781963734422,0.01,raiz unitaria
+log-retorno,c,-29.318899961821042,0.0,0.1167941821493337,0.1,estacionaria

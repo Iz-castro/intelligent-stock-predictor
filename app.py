@@ -1,162 +1,184 @@
-import gradio as gr
+"""Interface Gradio do Intelligent Stock Predictor.
+
+Permite escolher o papel, as datas de corte, a rede (GRU, LSTM ou nenhuma), as
+etapas do estudo e os grupos de métricas exibidos. Cada execução baixa os dados do
+Yahoo Finance (ou usa o cache), treina os modelos e salva tudo em results/<ATIVO>/.
+
+Uso:
+    python app.py
+"""
+import contextlib
+import inspect
+import io
 import os
-import pandas as pd
-from train_multivariado import treinar_modelo
-from comparar_modelo import comparar_modelo
-from validar_e_prever_30_dias import validar_e_prever_30_dias
-from core.data_preprocessing_multivariado import merge_and_clean_csv
-from utils.historico_updater import atualiza_historico_from_upload
-from utils.gerenciamento import criar_papel, remover_papel, remover_modelo
 
-RESULTS_DIR = "results"
-MODEL_DIR = "models"
-os.makedirs(RESULTS_DIR, exist_ok=True)
+os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "2")  # silencia o log informativo do TensorFlow
 
-def listar_papeis():
-    caminho = "data/historico_global"
-    if not os.path.exists(caminho):
-        return []
-    return sorted([f.replace(".csv", "") for f in os.listdir(caminho) if f.endswith(".csv")])
+import matplotlib  # noqa: E402
 
-def atualizar_dropdown_papeis():
-    return gr.update(choices=listar_papeis())
+matplotlib.use("Agg")
 
-def wrapper_criar_papel(papel):
-    return criar_papel(papel)
+import gradio as gr  # noqa: E402
+import pandas as pd  # noqa: E402
 
-def wrapper_atualizar_historico(papel, arquivo):
-    if not arquivo:
-        return "❌ Nenhum arquivo foi enviado."
-    return atualiza_historico_from_upload(papel, arquivo)
+import config  # noqa: E402
+import pipeline  # noqa: E402
+from core import dados  # noqa: E402
 
-def wrapper_preprocessar(papel):
-    caminho_historico = f"data/historico_global/{papel}.csv"
-    if not os.path.exists(caminho_historico):
-        return pd.DataFrame(), None, None
-    df = pd.read_csv(caminho_historico)
-    export_path = os.path.join(RESULTS_DIR, f"dados_preprocessados_{papel}.csv")
-    df.to_csv(export_path, index=False)
-    return df, df, export_path
+ATIVOS = ["PETR4", "VALE3", "ITUB4", "BBAS3", "BBDC4", "ABEV3", "WEGE3", "BBSE3", "TAEE11", "CMIG4"]
+REDES = {"GRU": "gru", "LSTM": "lstm", "Nenhuma (só modelos estatísticos)": None}
+ETAPAS = ["Diagnóstico", "Previsão e métricas", "Risco (VaR)", "Projeção GBM"]
+GRUPOS_METRICAS = {
+    "Erro no preço (RMSE, MAE, MAPE, R²)": ["RMSE_preco", "MAE_preco", "MAPE_preco_%", "R2_preco"],
+    "Erro no retorno (RMSE, MASE, U de Theil, R² fora da amostra)":
+        ["RMSE_ret_%", "MASE_ret", "U_Theil", "R2_fora_amostra_%"],
+    "Direção (acerto e teste binomial)": ["acerto_direcional_%", "binomial_p"],
+    "Diebold-Mariano contra o passeio aleatório": ["DM_estat", "DM_p"],
+}
 
-def wrapper_treinar(papel, _, tipo_modelo):
-    import sys
-    import io
 
-    caminho_historico = f"data/historico_global/{papel}.csv"
-    if not os.path.exists(caminho_historico):
-        return f"❌ Histórico consolidado de {papel} não encontrado.", None, "", ""
+def _tabela(df: pd.DataFrame | None, casas: int = 4):
+    return None if df is None else df.round(casas).reset_index()
 
-    df = pd.read_csv(caminho_historico)
-    old_stdout = sys.stdout
-    sys.stdout = mystdout = io.StringIO()
+
+def _validar_data(texto: str, nome: str) -> str:
+    try:
+        return pd.Timestamp(texto.strip()).strftime("%Y-%m-%d")
+    except (ValueError, AttributeError) as erro:
+        raise ValueError(f"Data inválida em '{nome}': use o formato AAAA-MM-DD.") from erro
+
+
+def executar(ativo, inicio, fim_treino, fim_validacao, rede, criterio, etapas, grupos_metricas, atualizar,
+             progresso=gr.Progress()):
+    log = io.StringIO()
+    saida = [None] * 16
 
     try:
-        resultado, grafico = treinar_modelo(papel, df, tipo_modelo=tipo_modelo)
-        log_treino = mystdout.getvalue()
-    finally:
-        sys.stdout = old_stdout
+        with contextlib.redirect_stdout(log):
+            if not ativo:
+                raise ValueError("Escolha ou digite um papel.")
+            inicio = _validar_data(inicio, "início")
+            fim_treino = _validar_data(fim_treino, "fim do treino")
+            fim_validacao = _validar_data(fim_validacao, "fim da validação")
+            if not inicio < fim_treino < fim_validacao:
+                raise ValueError("As datas precisam seguir a ordem início < fim do treino < fim da validação.")
 
-    return resultado[0], grafico, resultado[1], log_treino
+            config.definir_ativo(ativo, inicio, fim_treino, fim_validacao)
+            print(f"Ativo: {config.TICKER} | resultados em results/{config.NOME_ATIVO}/")
 
-def wrapper_comparar(papel, tipo_modelo):
-    caminho_historico = f"data/historico_global/{papel}.csv"
-    if not os.path.exists(caminho_historico):
-        return f"❌ Histórico consolidado de {papel} não encontrado.", None
-    return comparar_modelo(papel, caminho_historico, tipo_modelo=tipo_modelo)
+            progresso(0.05, desc="Carregando dados")
+            base, rotulos = pipeline.etapa_dados(atualizar=atualizar)
+            saida[1] = _tabela(dados.resumo_periodos(base.index))
+            diag = aval = risc = proj = None
 
-def wrapper_validar(papel, tipo_modelo):
-    caminho_historico = f"data/historico_global/{papel}.csv"
-    if not os.path.exists(caminho_historico):
-        return f"❌ Histórico consolidado de {papel} não encontrado.", None
-    return validar_e_prever_30_dias(papel, caminho_historico, tipo_modelo=tipo_modelo)
+            if "Diagnóstico" in etapas:
+                progresso(0.15, desc="Diagnóstico")
+                diag = pipeline.etapa_diagnostico(base, rotulos)
+                saida[2] = _tabela(diag["raiz_unitaria"])
+                saida[3] = _tabela(diag["momentos"].to_frame("valor"), 5)
+                saida[4] = _tabela(diag["dependencia"])
+                saida[5], saida[6] = diag["figuras"]
 
-with gr.Blocks(theme=gr.themes.Monochrome()) as app:
-    gr.Markdown("""# 📈 Intelligent Stock Predictor""")
+            if "Previsão e métricas" in etapas:
+                tipo = REDES[rede]
+                progresso(0.35, desc=f"Previsão (ARIMA{' e ' + tipo.upper() if tipo else ''})")
+                aval = pipeline.etapa_avaliacao(base, rotulos, tipo_rede=tipo, criterio_arima=criterio)
+                colunas = [c for g in (grupos_metricas or GRUPOS_METRICAS) for c in GRUPOS_METRICAS[g]]
+                saida[7] = _tabela(aval["tabela"][colunas])
+                tab = aval["tabela"]
+                saida[8] = (f"**Teste:** {tab.attrs['pregoes']} pregões, {tab.attrs['taxa_dias_alta_%']:.1f}% de "
+                            f"dias de alta. **ARIMA escolhido no treino ({aval['arima']['criterio']}):** {aval['arima']['ordem']} "
+                            f"{'com' if aval['arima']['com_constante'] else 'sem'} constante. "
+                            "U de Theil abaixo de 1, R² fora da amostra positivo e Diebold-Mariano negativo "
+                            "com p-valor baixo indicariam ganho sobre o passeio aleatório.")
+                figuras = aval["figuras"]
+                saida[9] = figuras[0] if len(figuras) == 2 else None   # curva de treino, se houver rede
+                saida[10] = figuras[-1]
+
+            if "Risco (VaR)" in etapas:
+                progresso(0.75, desc="Backtest do VaR")
+                risc = pipeline.etapa_risco(base, rotulos)
+                saida[11] = _tabela(risc["resumo"])
+                saida[12] = risc["figuras"][0]
+
+            if "Projeção GBM" in etapas:
+                progresso(0.85, desc="Projeção GBM")
+                vol = risc["vol_ewma_proximo_pregao"] if risc else None
+                proj = pipeline.etapa_projecao(base, vol)
+                saida[13] = _tabela(proj["cenarios"].T.rename_axis("medida"), 2)
+                saida[14] = proj["figuras"][0]
+
+            progresso(0.95, desc="Resumo")
+            saida[15] = pipeline.gerar_resumo(base, rotulos, diag, aval, risc, proj)
+            print("Concluído.")
+    except Exception as erro:  # a mensagem aparece no log da interface
+        log.write(f"\nERRO: {type(erro).__name__}: {erro}\n")
+
+    saida[0] = log.getvalue()
+    arquivos = sorted(str(p) for p in config.DIR_RESULTADOS.glob("*") if p.is_file())
+    return saida + [arquivos or None]
+
+
+# A partir do Gradio 6 o tema é passado no launch(); antes disso, no Blocks()
+TEMA = gr.themes.Monochrome()
+TEMA_NO_LAUNCH = "theme" in inspect.signature(gr.Blocks.launch).parameters
+
+with gr.Blocks(title="Intelligent Stock Predictor", **({} if TEMA_NO_LAUNCH else {"theme": TEMA})) as app:
+    gr.Markdown("# Intelligent Stock Predictor\n"
+                "Previsão um passo à frente, backtest de VaR e projeção por GBM para papéis da B3 "
+                "(dados ajustados do Yahoo Finance). Projeto educacional, sem recomendação de investimento.")
+
+    with gr.Row():
+        with gr.Column(scale=1):
+            ativo = gr.Dropdown(ATIVOS, value="PETR4", label="Papel", allow_custom_value=True,
+                                info="Escolha da lista ou digite outro código da B3 (o sufixo .SA é incluído)")
+            with gr.Row():
+                inicio = gr.Textbox(value=config.DATA_INICIO, label="Início dos dados")
+                fim_treino = gr.Textbox(value=config.FIM_TREINO, label="Fim do treino")
+                fim_validacao = gr.Textbox(value=config.FIM_VALIDACAO, label="Fim da validação")
+            with gr.Row():
+                rede = gr.Radio(list(REDES), value="GRU", label="Rede neural")
+                criterio = gr.Radio([("AICc", "aicc"), ("BIC", "bic")], value=config.CRITERIO_ARIMA,
+                                    label="Critério do ARIMA")
+            etapas = gr.CheckboxGroup(ETAPAS, value=ETAPAS, label="Etapas")
+            grupos_metricas = gr.CheckboxGroup(list(GRUPOS_METRICAS), value=list(GRUPOS_METRICAS),
+                                               label="Métricas exibidas na previsão")
+            atualizar = gr.Checkbox(value=True, label="Baixar dados atualizados do Yahoo (desmarque para usar o cache)")
+            botao = gr.Button("Executar", variant="primary")
+        with gr.Column(scale=1):
+            log = gr.Textbox(label="Log da execução", lines=14, max_lines=30)
+            periodos = gr.Dataframe(label="Períodos", interactive=False)
 
     with gr.Tabs():
-        # Aba 1 - Criar novo papel
-        with gr.Tab("➕ Criar Papel"):
-            novo_papel_input = gr.Textbox(label="Nome do novo papel (ex: PETR4)")
-            botao_criar = gr.Button("Criar Papel")
-            saida_criacao = gr.Textbox(label="Status")
-            botao_criar.click(fn=wrapper_criar_papel, inputs=[novo_papel_input], outputs=[saida_criacao])
+        with gr.Tab("Diagnóstico"):
+            raiz = gr.Dataframe(label="Raiz unitária (ADF e KPSS)", interactive=False)
+            with gr.Row():
+                momentos = gr.Dataframe(label="Momentos do log-retorno", interactive=False)
+                dependencia = gr.Dataframe(label="Dependência temporal (p-valores)", interactive=False)
+            fig_serie = gr.Image(label="Série, retorno e retorno ao quadrado", type="filepath")
+            fig_acf = gr.Image(label="ACF e PACF", type="filepath")
+        with gr.Tab("Previsão e métricas"):
+            nota = gr.Markdown()
+            metricas = gr.Dataframe(label="Métricas no teste", interactive=False)
+            fig_comp = gr.Image(label="Previsões no teste", type="filepath")
+            fig_treino = gr.Image(label="Curva de aprendizado da rede", type="filepath")
+        with gr.Tab("Risco (VaR)"):
+            var = gr.Dataframe(label="Backtest do VaR EWMA de 1 dia", interactive=False)
+            fig_var = gr.Image(label="P&L e VaR", type="filepath")
+        with gr.Tab("Projeção GBM"):
+            gbm = gr.Dataframe(label="Cenários de um ano", interactive=False)
+            fig_gbm = gr.Image(label="Leque de projeção", type="filepath")
+        with gr.Tab("Resumo e arquivos"):
+            resumo = gr.Markdown()
+            arquivos = gr.File(label="Arquivos gerados", file_count="multiple")
 
-        # Aba 2 - Adicionar Dados ao Papel
-        with gr.Tab("📤 Adicionar Histórico"):
-            papel_input_hist = gr.Dropdown(label="Selecione o Papel", choices=listar_papeis(), interactive=True)
-            btn_refresh_papeis = gr.Button("🔄 Atualizar lista de papéis")
-            btn_refresh_papeis.click(fn=atualizar_dropdown_papeis, inputs=[], outputs=[papel_input_hist])
+    botao.click(
+        executar,
+        inputs=[ativo, inicio, fim_treino, fim_validacao, rede, criterio, etapas, grupos_metricas, atualizar],
+        outputs=[log, periodos, raiz, momentos, dependencia, fig_serie, fig_acf,
+                 metricas, nota, fig_treino, fig_comp, var, fig_var, gbm, fig_gbm, resumo, arquivos],
+    )
 
-            upload_historico = gr.File(label="Upload CSV", file_types=[".csv"])
-            botao_atualizar = gr.Button("📂 Atualizar Histórico")
-            saida_atualizacao = gr.Textbox(label="Status da Atualização")
-            botao_atualizar.click(fn=wrapper_atualizar_historico, inputs=[papel_input_hist, upload_historico], outputs=[saida_atualizacao])
-
-        # Aba 3 - Treinar Modelo
-        with gr.Tab("🔧 Pré-processar + Treinar"):
-            papel_treino = gr.Dropdown(label="Selecione o Papel", choices=listar_papeis(), interactive=True)
-            btn_refresh_treino = gr.Button("🔄 Atualizar lista de papéis")
-            btn_refresh_treino.click(fn=atualizar_dropdown_papeis, inputs=[], outputs=[papel_treino])
-
-            modelo_dropdown = gr.Dropdown(label="Tipo de Modelo", choices=["lstm", "gru"], value="lstm")
-
-            preprocessar_btn = gr.Button("🔍 Pré-processar")
-            tabela_saida = gr.Dataframe(label="Dados do Papel")
-            dados_unificados = gr.State()
-            download_csv = gr.File(label="CSV Exportado")
-
-            preprocessar_btn.click(fn=wrapper_preprocessar, inputs=[papel_treino], outputs=[tabela_saida, dados_unificados, download_csv])
-
-            treinar_btn = gr.Button("🚀 Treinar Modelo")
-            resultado_saida = gr.Textbox(label="Mensagem de Treinamento")
-            grafico_saida = gr.Image(label="Gráfico de Perda")
-            metricas_saida = gr.Textbox(label="Últimas Métricas de MSE")
-            log_saida = gr.Textbox(label="Log do Treinamento", lines=20)
-
-            treinar_btn.click(
-                fn=wrapper_treinar,
-                inputs=[papel_treino, dados_unificados, modelo_dropdown],
-                outputs=[resultado_saida, grafico_saida, metricas_saida, log_saida]
-            )
-
-        # Aba 4 - Avaliação & Previsão
-        with gr.Tab("📊 Avaliação e Previsão"):
-            papel_avaliar = gr.Dropdown(label="Escolha o Papel", choices=listar_papeis(), interactive=True)
-            btn_refresh_avaliar = gr.Button("🔄 Atualizar lista de papéis")
-            btn_refresh_avaliar.click(fn=atualizar_dropdown_papeis, inputs=[], outputs=[papel_avaliar])
-
-            modelo_dropdown_eval = gr.Dropdown(label="Tipo de Modelo", choices=["lstm", "gru"], value="lstm")
-
-            comparar_btn = gr.Button("📈 Comparar com Teste")
-            resultado_comp = gr.Textbox(label="Métricas de Previsão")
-            grafico_comp = gr.Image(label="Gráfico Real x Previsto")
-
-            validar_btn = gr.Button("🔮 Validar e Prever 30 dias")
-            resultado_val = gr.Textbox(label="Resultado da Previsão")
-            grafico_val = gr.Image(label="Gráfico Previsão 30 dias")
-
-            comparar_btn.click(
-                fn=wrapper_comparar,
-                inputs=[papel_avaliar, modelo_dropdown_eval],
-                outputs=[resultado_comp, grafico_comp]
-            )
-            validar_btn.click(
-                fn=wrapper_validar,
-                inputs=[papel_avaliar, modelo_dropdown_eval],
-                outputs=[resultado_val, grafico_val]
-            )
-
-        # Aba 5 - Gerenciar Papéis
-        with gr.Tab("🧾 Gerenciar Papéis"):
-            papel_para_apagar = gr.Textbox(label="Nome do papel a apagar")
-            btn_apagar_papel = gr.Button("🗑️ Apagar Histórico do Papel")
-            out_apagar_papel = gr.Textbox(label="Status Remoção")
-            btn_apagar_papel.click(fn=remover_papel, inputs=[papel_para_apagar], outputs=[out_apagar_papel])
-
-            papel_modelo = gr.Textbox(label="Nome do papel para apagar treino")
-            btn_apagar_modelo = gr.Button("🗑️ Apagar Modelo Treinado")
-            out_apagar_modelo = gr.Textbox(label="Status Remoção de Modelo")
-            btn_apagar_modelo.click(fn=remover_modelo, inputs=[papel_modelo], outputs=[out_apagar_modelo])
 
 if __name__ == "__main__":
-    app.launch()
+    app.launch(**({"theme": TEMA} if TEMA_NO_LAUNCH else {}))

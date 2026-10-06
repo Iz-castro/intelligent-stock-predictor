@@ -1,0 +1,14 @@
+{
+  "tipo": "lstm",
+  "features": [
+    "log_ret",
+    "log_ret_quadrado",
+    "vol_ewma",
+    "volume_relativo"
+  ],
+  "janela": 60,
+  "escala_alvo": 0.027351345866918564,
+  "epocas": 33,
+  "fim_treino": "2022-12-31",
+  "fim_validacao": "2023-12-31"
+}

@@ -1,52 +1,5 @@
-# Byte-compiled / optimized / DLL files
 __pycache__/
-*.py[cod]
-*$py.class
-
-# Virtual environments
-venv/
-.venv/
-env/
-ENV/
-env.bak/
-.venv-fasterwhisper/
-venv-gpu/
-
-# Jupyter Notebook checkpoints
+*.pyc
 .ipynb_checkpoints/
-
-# Logs and temp files
-*.log
-*.tmp
-*.bak
-.DS_Store
-Thumbs.db
-
-# IDE settings
-.vscode/
-.idea/
-
-# Model weights and intermediate training files
-*.h5
-*.keras
-*.pkl
-*.joblib
-*.ckpt
-*.pb
-
-# Output directories (custom)
-models/
-data/
-flagged/
-
-# Git settings
-.git/
-
-# TensorBoard logs
-logs/
-events.out.tfevents.*
-
-# Gradio cache
-gradio_cached_examples/
-*.gradio
-
+venv*/
+.venv/
